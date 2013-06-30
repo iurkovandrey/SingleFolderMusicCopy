@@ -12,6 +12,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 public class GetFileListTest {
 
     private static final String DIRECTORY_DELIMER = "/";
+    public static final String FAKE_PATH = "fake_path";
 
     @Value("${tmp.directory}")
     String tmpDirectory;
@@ -81,6 +83,28 @@ public class GetFileListTest {
         Collections.sort(expectedAllFiles);
         List<File> actualFileList = fileListUtil.getFileList(new File(tmpDirectory));
         assertEquals(expectedAllFiles, actualFileList);
+    }
+
+    @Test
+    public void testFileListUtilShouldReturnEmptyListWhenDirectoryEqualNull() throws Exception {
+        List<File> actualFileList = fileListUtil.getFileList(null);
+        assertNotNull(actualFileList);
+        assertEquals(0, actualFileList.size());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testFileDirectoryIsNotDirectory() throws Exception {
+        //Given
+        String pathname = tmpDirectory + DIRECTORY_DELIMER + RandomStringUtils.randomAlphanumeric(20);
+        File file = new File(pathname);
+        FileUtils.touch(file);
+        //When
+        fileListUtil.getFileList(file);
+    }
+
+    @Test(expected = FileNotFoundException.class)
+    public void testDirectoryDoesNotExist() throws Exception {
+        fileListUtil.getFileList(new File(tmpDirectory + DIRECTORY_DELIMER + FAKE_PATH));
     }
 
     private void addFilesToRootDirectory(List<File> expectedAllFiles) throws IOException {
